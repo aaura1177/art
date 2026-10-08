@@ -75,8 +75,8 @@ Temporary Items
 .apdisk
 
 ### Node ###
-# Logs
-logs
+# Logs (avoid bare "logs" — it also ignores Laravel storage/logs/)
+/logs/
 *.log
 npm-debug.log*
 yarn-debug.log*
@@ -193,11 +193,24 @@ $RECYCLE.BIN/
 *.zip
 
 # End of https://www.gitignore.io/api/node,macos,linux,laravel,windows,composer
-stock/storage/framework/laravel-excel/laravel-excel-vTlxkuK59BHiTdE4uXdimx8FduHChtuh.tmp
-stock/storage/framework/laravel-excel/laravel-excel-VFPqWKEw0ZLvroJReoMhTNAK0L9WN4ui.tmp
-stock/storage/framework/laravel-excel/laravel-excel-oJeQSdjIZpNrvTKb33GpSGS3ffi5gmCk.tmp
-stock/storage/framework/laravel-excel/laravel-excel-kiGxKN3tl4NLro57zT4SeCGGBDRyYZ85.tmp
-stock/storage/framework/laravel-excel/laravel-excel-E4ByU1uorFBb3NasEaLEEQkc1MJbC9jP.tmp
-stock/storage/framework/laravel-excel/laravel-excel-bmOtpWlsDT9UspxNuSKSPUAXAR4H4sRP.tmp
-stock/storage/framework/laravel-excel/laravel-excel-9IBNVU0zd1E2bQaFZt0AYbJYdaebBgZv.tmp
-stock/storage/framework/laravel-excel/laravel-excel-5MpUmZn6EN4WAGgKvUQ2qoZ5JyKDYNkR.tmp
+
+# Editor / local tooling
+.vscode/
+
+# Apache config backups
+.htaccess-*
+stock/.htaccess-*
+
+# PHPUnit caches
+.phpunit.result.cache
+.phpunit.cache/
+stock/.phpunit.result.cache
+stock/.phpunit.cache/
+
+# Laravel Excel export temps
+stock/storage/framework/laravel-excel/*
+!stock/storage/framework/laravel-excel/.gitignore
+
+# Loose document dumps (not app source)
+/*.pdf
+/stock/*.pdf

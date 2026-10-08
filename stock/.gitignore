@@ -75,8 +75,8 @@ Temporary Items
 .apdisk
 
 ### Node ###
-# Logs
-logs
+# Logs (avoid bare "logs" — it also ignores Laravel storage/logs/)
+/logs/
 *.log
 npm-debug.log*
 yarn-debug.log*
@@ -199,3 +199,20 @@ $RECYCLE.BIN/
 /package-lock.json
 /tools/chrome-pdf/node_modules/
 /tools/chrome-pdf/package-lock.json
+
+# Editor / local tooling
+.vscode/
+
+# Apache config backups
+.htaccess-*
+
+# PHPUnit caches
+.phpunit.result.cache
+.phpunit.cache/
+
+# Laravel Excel export temps
+/storage/framework/laravel-excel/*
+!/storage/framework/laravel-excel/.gitignore
+
+# Loose document dumps
+/*.pdf

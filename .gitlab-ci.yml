@@ -1,0 +1,35 @@
+stages:
+  - deploy 
+
+deploy:
+  stage: deploy
+  before_script:
+    # Install SSH client if not already available
+    - apt-get update -y && apt-get install -y ssh rsync
+    # Set up SSH key for authentication
+    - 'which ssh-agent || ( apt-get install -y openssh-client )'
+    - eval $(ssh-agent -s)
+    - ssh-add <(echo "$SSH_PRIVATE_KEY")
+    # Disable host key checking for SSH
+    - mkdir -p ~/.ssh
+    - echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config
+
+  script:
+    # Create a tar.gz archive of the ./stock directory
+    - tar -czvf stock.tar.gz ./stock/
+    
+    # Use SCP to copy the tar.gz archive to the remote server
+    - scp stock.tar.gz ubuntu@$SSH_HOST:/tmp/
+    
+    # SSH into the server and extract the tar.gz archive, excluding certain files/folders
+    - ssh ubuntu@$SSH_HOST "
+        cd /var/www/html/staging/stock/ && 
+        sudo tar --exclude='vendor' -xzvf /tmp/stock.tar.gz &&
+        rm /tmp/stock.tar.gz
+      "
+
+    # Restart Apache2 service on the remote server
+    - ssh ubuntu@$SSH_HOST "sudo systemctl restart apache2"
+
+  only:
+    - staging  # Deploy only when changes are pushed to the 'staging' branch

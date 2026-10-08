@@ -1,0 +1,96 @@
+header{
+	margin-top: 2rem;
+}
+
+.container{
+	border: 3px solid #000;
+	margin-bottom: 2rem;
+}
+
+h1{
+	font-size: 1.6rem;
+}
+
+h3{
+	font-size: 16px;
+    font-weight: bold;
+}
+
+#clogo img{
+	width: 450px;
+}
+
+#supplier{
+	text-align: right;
+}
+p{
+	margin-bottom: 0.3px;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+span{
+	font-size: 14px;
+    font-weight: 400;
+}
+
+strong{
+	font-weight: 700;
+}
+
+hr{
+	margin-top: 0.3rem;
+}
+
+.row{
+	margin-left: 0px;
+	margin-right: 0px;
+}
+.col{
+	padding-right: 0px;
+    padding-left: 0px;
+}
+
+.col-6{
+	padding-right: 0px;
+    padding-left: 0px;
+}
+.col-4{
+	padding-right: 1px;
+    padding-left: 0px;
+}
+
+.row.box-space {
+    margin-top: 1rem;
+}
+
+th.box-space{
+	 margin-top: 1rem;
+}
+
+.pull-right {
+    float: right;
+}
+
+.table th{
+	font-size: 16px;
+    font-weight: bold;
+}
+
+.table td{
+	font-size: 14px;
+	padding: .5rem;
+}
+
+
+.table-bordered td, .table-bordered th {
+    border: 2px solid #333;
+}
+
+.table thead th {
+    border-bottom: 2px solid #333;
+}
+
+.page-break {
+    page-break-after: always;
+}

@@ -1,0 +1,261 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use Illuminate\Support\Facades\DB;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
+use App\allocated_backorder;
+use App\poTable;
+use App\product;
+use App\Mail\PoRaiseMail;
+use Mail;
+use App\purchaseOrder;
+
+
+class BackOrderAutomationController extends Controller
+{
+public function checkBackorderStockStatus(Request $request)
+{
+    $input = $request->all();
+
+
+
+
+    // Validate the input data
+    $validator = Validator::make($input, [
+        'order_id' => 'required|numeric',
+        'quantity' => 'required|integer|min:1',
+        'sku' => 'required|string|max:10',
+        'location' => 'required'
+    ]);
+
+    // Return validation errors if validation fails
+    if ($validator->fails()) {
+        return response()->json([
+            'status' => 400,
+            'error' => $validator->errors()
+        ]);
+    }
+
+    // Extract values from the input
+    $code = $input['sku'] ?? '';
+    $order_id = $input['order_id'] ?? '';
+    $requested_quantity = (int) ($input['quantity'] ?? 0);
+    $location = $input['location'];
+
+    // Fetch current stock for the given SKU
+    $currentStock = product::where(['code' => $code])
+        ->select(['quantity', 'EAN', 'id'])
+        ->first();
+
+    // If no stock found for the SKU
+    if (!$currentStock) {
+        return response()->json([
+            'status' => 404,
+            'msg' => 'Product not found'
+        ]);
+    }
+
+    // all new code
+
+    // Check if the order already exists in allocated_backorder
+    $orderExists = allocated_backorder::where(['sku' => $code, 'order_id' => $order_id])->first();
+
+    // If the order doesn't exist, insert it
+    if (!$orderExists) {
+        $parentOrder = allocated_backorder::where('order_id', $order_id)->first();
+
+        // If no parent order is found, it means this is a main order
+        if (!$parentOrder) {
+            // Insert the first child order with no parent_id (i.e., this will be the parent/main order)
+            allocated_backorder::insert([
+                'sku' => $code,
+                'order_id' => $order_id,
+                'quantity' => $requested_quantity,
+            ]);
+        }
+    }
+
+    // Check for the EAN (European Article Number)
+    $product_Ean = $currentStock['EAN'] ?? '';
+    if (!$product_Ean) {
+        return response()->json([
+            'status' => 401,
+            'msg' => 'EAN not found'
+        ]);
+    }
+
+    // API call to get the remaining PO quantities
+    $apiUrl = "https://inventory.artisanadmin.net/api/remainingPoQty?api_token=c7d198110bf4d54ebc5c7a24175ceab18c5363db11f487ad2031a6391346e5b1&sku=" . $code;
+    $responseData = file_get_contents($apiUrl);
+    $data = json_decode($responseData, true);
+
+    // Initialize supplier references from the API response
+    $supplierReferences = [];
+    $Supplier = [];
+    
+    foreach ($data as $order) {
+        if (strpos($order['supplier_reference'], $location) !== false) {
+            $supplierReferences[$order['purchase_order_id']] = $order['total_remqty'];
+            $Supplier[$order['purchase_order_id']] = $order['supplier_reference'];
+        }
+    }
+
+    // Initialize remaining stock and fulfillment checks
+    $remainingStock = $currentStock['quantity'] ?? 0;
+    $quantityToFulfill = $requested_quantity;
+    $fulfilledPoId = null;
+
+    // First, try to fulfill the order from the existing stock
+    if ($remainingStock >= $quantityToFulfill) {
+        // If we have enough stock, fulfill the order
+        $remainingStock -= $quantityToFulfill;
+        
+        // Update the allocated backorder record (fulfilling the order from stock)
+        $orderExists = allocated_backorder::where(['sku' => $code, 'order_id' => $order_id])->first();
+
+        return response()->json([
+            'status' => "wc-backorder24",
+            'msg' => 'Getting Polished, QC\'d and Packed',
+            'fulfilled_po_id' => $orderExists['po_number'] ?? '',
+            'supplier_reference' => $orderExists['supplier_reference'] ?? ''
+        ]);
+    } else {
+        // If stock is insufficient, we need to fulfill the remaining quantity using the available POs
+        $quantityToFulfill -= $remainingStock; // Reduce the remaining quantity by the stock available
+        $remainingStock = 0; // Stock is now depleted
+
+        // Now, try fulfilling the order using the available POs
+        foreach ($supplierReferences as $po_id => $available_qty) {
+            if ($quantityToFulfill <= 0) {
+                break; // Stop if we've already fulfilled the entire required quantity
+            }
+
+            // Deduct from this PO to fulfill the remaining order
+            $qtyToDeduct = min($available_qty, $quantityToFulfill); // Deduct the minimum of what's available or needed
+            $quantityToFulfill -= $qtyToDeduct; // Decrease the required quantity
+
+            // If this PO is used to fulfill part of the order, store the PO ID
+            if ($fulfilledPoId === null) {
+                $fulfilledPoId = $po_id;
+            }
+
+            // Update PO quantity (deduct from the available PO)
+            $supplierReferences[$po_id] -= $qtyToDeduct;
+        }
+
+        // After trying all available POs, check if we fulfilled the order
+        if ($quantityToFulfill > 0) {
+            // If we still can't fulfill the order, mark the excess quantity as backorder
+            // Insert backorder record to notify the system
+            allocated_backorder::insert([
+                'sku' => $code,
+                'order_id' => $order_id,
+                'quantity' => $quantityToFulfill,
+                'status' => 'backorder',
+                'updated_at' => now()
+            ]);
+
+            return response()->json([
+                'status' => "wc-backorder04",  // Marked as backorder
+                'msg' => 'Notified Jaipur Factory. Backorder Created',
+            ]);
+        } else {
+            // If part or all of the order was fulfilled using POs, update the allocated order
+            DB::table('allocated_backorder')
+                ->where('sku', $code)
+                ->where('order_id', $order_id)
+                ->update([
+                    'po_number' => $fulfilledPoId,
+                    'supplier_reference' => $Supplier[$fulfilledPoId] ?? '',
+                    'updated_at' => now(),
+                ]);
+
+            // Fetch the purchase order to get delivery details
+            $purchaseOrder = DB::table('purchase_order')->where('id', $fulfilledPoId)->first();
+
+            return response()->json([
+                'status' => "wc-backorder14",
+                'msg' => 'Under Production',
+                'fulfilled_po_id' => $fulfilledPoId,
+                'supplier_reference' => $Supplier[$fulfilledPoId] ?? '',
+                'del_date' => $purchaseOrder->del_date ?? ''
+            ]);
+        }
+    }
+}
+
+
+    private function updateStock($productId, $quantity)
+    {
+        product::where('id', $productId)->update(['quantity' => $quantity]);
+    }
+
+    public function sendPOMailtoFactory()
+    {
+        // DB::table('allocated_backorder')->truncate();
+        // Fetch all pre-orders that are not fully fulfilled
+        $unfulfilledPreOrders = allocated_backorder::where('quantity', '!=', DB::raw('fulfilled'))->get();
+
+        $skuQuantities = [];
+        $skuCodes = [];
+        $eanCodes = [];
+
+        // Calculate remaining quantities for each SKU
+        foreach ($unfulfilledPreOrders as $order) {
+            $sku = $order['sku'];
+            $quantity = $order['quantity'];
+            $fulfilledQuantity = $order['fulfilled'];
+
+            $skuQuantities[$sku] = ($skuQuantities[$sku] ?? 0) + ($quantity - $fulfilledQuantity);
+
+            if (!in_array($sku, $skuCodes)) {
+                $skuCodes[] = $sku;
+            }
+        }
+
+        // Get EANs for the SKUs
+        $eanQueryResults = product::whereIn('code', $skuCodes)
+            ->select(['EAN', 'code'])
+            ->get();
+
+        foreach ($eanQueryResults as $ean) {
+            $eanCodes[$ean['code']] = $ean['EAN'];
+        }
+
+        // Get already raised PO quantities and sum them by EAN
+        $raisedPOQuantities = poTable::whereIn('EAN', $eanCodes)->select(['remqty', 'EAN'])->get();
+
+        // Prepare a map to sum remaining quantities by EAN
+        $remainingQuantityByEAN = [];
+        foreach ($raisedPOQuantities as $po) {
+            $remainingQuantityByEAN[$po->EAN] = ($remainingQuantityByEAN[$po->EAN] ?? 0) + $po->remqty;
+        }
+
+        // Prepare the response with SKUs and their quantities left to raise a new PO
+        $details = [];
+        foreach ($skuQuantities as $sku => $remainingQuantity) {
+            // Get EAN for the SKU
+            $ean = $eanCodes[$sku] ?? null;
+
+            // Get total remaining quantity for the EAN
+            $totalRemainingQuantity = $remainingQuantityByEAN[$ean] ?? 0;
+
+            // Calculate the quantity needed for the new PO
+            $quantityToOrder = max(0, $remainingQuantity - $totalRemainingQuantity); // Ensure it's not negative
+
+            if ($quantityToOrder > 0) {
+                $details[] = [
+                    'SKU' => $sku,
+                    'EAN' => $ean,
+                    'quantity_to_order' => $quantityToOrder,
+                ];
+            }
+        }
+
+        $x = mail::to('dilshadahmed7454@gmail.com')->send(new PoRaiseMail($details));
+        print_r($x);
+        return $details;
+    }
+}

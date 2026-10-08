@@ -1,0 +1,288 @@
+header{
+	margin-top: 2rem;
+}
+
+.container{
+	width: 1000px;
+	border: 3px solid #000;
+	margin-bottom: 2rem;
+}
+
+h1{
+	font-size: 1.6rem;
+}
+
+h3{
+	font-size: 16px;
+    font-weight: bold;
+}
+
+#clogo img{
+	width: 450px;
+}
+
+#supplier{
+	text-align: right;
+}
+p{
+	margin-bottom: 0.3px;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+span{
+	font-size: 14px;
+    font-weight: 400;
+}
+
+strong{
+	font-weight: 700;
+}
+
+hr{
+	margin-top: 0.3rem;
+}
+
+.row{
+	margin-left: 0px;
+	margin-right: 0px;
+}
+.col{
+	padding-right: 0px;
+    padding-left: 0px;
+}
+
+.col-6{
+	padding-right: 0px;
+    padding-left: 0px;
+}
+.col-4{
+	padding-right: 1px;
+    padding-left: 0px;
+}
+
+.row.box-space {
+    margin-top: 1rem;
+}
+
+th.box-space{
+	 margin-top: 1rem;
+}
+
+.pull-right {
+    float: right;
+}
+
+/* BS5 regression: grid classes on table rows must stay table layout */
+table tr.row {
+    display: table-row !important;
+}
+
+table tr.row > td[class*="col-"],
+table tr.row > th[class*="col-"],
+table tr > td[class*="col-"],
+table tr > th[class*="col-"] {
+    display: table-cell !important;
+    flex: none !important;
+    vertical-align: top;
+}
+
+table tr.row > td[class*="col-"],
+table tr.row > th[class*="col-"] {
+    width: 25%;
+}
+
+@media print {
+    html,
+    body {
+        height: auto !important;
+        min-height: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    header {
+        margin-top: 0 !important;
+    }
+
+    /* -----------------------------------------------------------------
+       Global print rule for every page using layouts/modal.
+       - Numbers (EAN, HSN, rate, amount, GST, totals) are unbreakable
+         tokens, so word-break:normal + overflow-wrap:normal keeps each on
+         a single line. Text with spaces (descriptions/addresses) still
+         wraps at word boundaries — no more BS5 letter-by-letter breaks.
+       - The browser "Fit to page width" then scales the table to the page.
+       Per-page <style> still controls container width and font sizes.
+       ----------------------------------------------------------------- */
+    .table th,
+    .table td {
+        word-break: normal !important;
+        overflow-wrap: normal !important;
+    }
+
+    /* Keep right-column header/terms inside the bordered container */
+    .container {
+        box-sizing: border-box !important;
+    }
+
+    .container .col-6 {
+        box-sizing: border-box !important;
+        padding-left: 8px !important;
+        padding-right: 10px !important;
+    }
+
+    #supplier.pull-right,
+    #supplier {
+        float: none !important;
+        text-align: right !important;
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+
+    #buyer {
+        float: none !important;
+        text-align: right !important;
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+
+    [style*="margin-top: -"] {
+        margin-top: 0 !important;
+    }
+}
+
+.table th{
+	font-size: 16px;
+    font-weight: bold;
+}
+
+.table td{
+	font-size: 14px;
+	padding: .5rem;
+}
+
+
+.table-bordered td, .table-bordered th {
+    border: 2px solid #333;
+}
+
+.table thead th {
+    border-bottom: 2px solid #333;
+}
+
+.page-break {
+    page-break-after: always;
+}
+
+/* =====================================================================
+   Bootstrap 5 PRINT COMPATIBILITY LAYER
+   ---------------------------------------------------------------------
+   Restores the pre-upgrade (Bootstrap 4) print look for every page that
+   extends layouts/modal.blade.php. This file loads AFTER bootstrap.min.css,
+   so these rules win globally and remove the need for per-page print hacks.
+   Values are calibrated to the old BS4 Reboot/table defaults.
+   ===================================================================== */
+
+/* TERMS OF PAYMENT / DELIVERY — must stay inside the right column in print.
+   Old layout used pull-right + fixed 450px/360px widths (for 1180px desktop)
+   which overflow and clip when the column is narrower in print. */
+address table {
+    width: 100% !important;
+    table-layout: fixed !important;
+}
+
+address td.pull-right,
+address th.pull-right,
+address td.text-end,
+address th.text-end {
+    float: none !important;
+    display: table-cell !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    text-align: right !important;
+    vertical-align: top !important;
+    word-break: normal !important;
+    overflow-wrap: break-word !important;
+    box-sizing: border-box !important;
+}
+
+address td.pull-right p,
+address th.pull-right p,
+address td.text-end p,
+address th.text-end p,
+address td.pull-right h3,
+address th.pull-right h3,
+address td.text-end h3,
+address th.text-end h3 {
+    width: auto !important;
+    max-width: 100% !important;
+    text-align: right !important;
+    box-sizing: border-box !important;
+}
+
+/* Override any leftover inline width on terms cells */
+address td[style*="width"],
+address td.pull-right[style],
+address td.text-end[style] {
+    width: 100% !important;
+    max-width: 100% !important;
+}
+
+address p[style*="width"] {
+    width: auto !important;
+    max-width: 100% !important;
+}
+
+/* Delivery terms body cell — layout only; alignment set below */
+address td.terms-delivery-body {
+    float: none !important;
+    display: table-cell !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    vertical-align: top !important;
+    word-break: normal !important;
+    overflow-wrap: break-word !important;
+    box-sizing: border-box !important;
+}
+
+/* Delivery terms body: heading stays right, numbered lines start from the left
+   (matches pre-upgrade layout). Indent from the left so there's a gap between
+   the DISPATCH block (left column) and the delivery terms (right column). */
+address td.terms-delivery-body,
+address td.terms-delivery-body p,
+address td.pull-right[style*="text-align: left"],
+address td.pull-right[style*="text-align: left"] p {
+    text-align: left !important;
+}
+
+address td.terms-delivery-body,
+address td.pull-right[style*="text-align: left"] {
+    padding-left: 25% !important;
+}
+
+/* Service PO: no DISPATCH block on the left, so the delivery value must sit
+   under its right-aligned TERMS OF DELIVERY heading (not float mid-page). */
+address td.terms-delivery-body.service-po-terms,
+address td.terms-delivery-body.service-po-terms p {
+    padding-left: 0 !important;
+    text-align: right !important;
+}
+
+/* Signature company name must stay on one line in print */
+.sig-name {
+    white-space: nowrap !important;
+}
+
+/* Money amounts and footer totals must never break across two lines. */
+.table td strong,
+#tamount,
+#tamount .amt {
+    white-space: nowrap !important;
+}
+
+/* BS5 tightened default header-cell padding to .5rem; BS4 used .75rem.
+   Restore the pre-upgrade spacing for header cells. */
+.table th {
+    padding: 0.75rem;
+    vertical-align: top;
+}

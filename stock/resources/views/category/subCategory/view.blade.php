@@ -1,0 +1,31 @@
+@extends('layouts.app')
+
+@section('content')
+
+  <div class="mx-2">
+    <div class="row mx-0 my-2">
+        <h2>Update Sub-Category</h2>
+    </div>
+
+    <form method="POST" action="{{ url('/category/subCategory/view/'.$subCategory->id)}}">
+      @csrf
+
+      <!-- Form Starts -->
+      <div class="form-group">
+        <div class=" row">
+          <div class="col-4"> 
+            <label class="control-label">{{ __('Sub-Category Name') }}</label>
+            <input type="text" class="form-control" name="name" placeholder="Table, etc." required="required" value="{{$subCategory->name}}" />
+          </div>  
+        </div>
+            
+        <div class="row col-4">
+          <button type="submit" class="btn btn-primary mt-3">Update Sub-Category</button>
+        </div>
+      
+      </div>
+      
+    </form>  
+  </div> 
+
+@endsection

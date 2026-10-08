@@ -1,0 +1,42 @@
+
+<?php
+
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Database\Migrations\Migration;
+
+class CreateAllocated_backorderTable extends Migration
+{
+    /**
+     * Run the migrations.
+     *
+     * @return void
+     */
+    public function up()
+    {
+        Schema::create('allocated_backorder', function (Blueprint $table) {
+            $table->bigInteger('id')->unsigned()->autoIncrement();
+            $table->bigInteger('order_id');
+            $table->string('sku');
+            $table->bigInteger('quantity');
+            $table->string('fulfilled')->nullable();
+            $table->string('status');
+            $table->bigInteger('po_number')->nullable();
+            $table->string('supplier_reference')->nullable();
+            $table->string('msg')->nullable();
+            $table->string('fulfilled_po_id')->nullable();
+            $table->string('del_date')->nullable();
+            $table->timestamps();
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     *
+     * @return void
+     */
+    public function down()
+    {
+        Schema::drop('allocated_backorder');
+    }
+}

@@ -1,0 +1,24 @@
+{
+  "private": true,
+  "dependencies": {
+    "@ckeditor/ckeditor5-build-classic": "41.4.2",
+    "@fortawesome/fontawesome-free": "6.5.2",
+    "bootstrap": "5.3.3",
+    "bootstrap-select": "1.14.0-beta3",
+    "chart.js": "4.4.8",
+    "datatables.net": "1.13.11",
+    "datatables.net-bs5": "1.13.11",
+    "datatables.net-buttons": "2.4.2",
+    "datatables.net-buttons-dt": "2.4.2",
+    "datatables.net-fixedcolumns": "5.0.4",
+    "datatables.net-plugins": "2.0.8",
+    "flatpickr": "4.6.13",
+    "jquery": "3.7.1",
+    "jquery-ui": "1.13.2",
+    "jquery.easing": "1.4.1",
+    "jszip": "3.10.1",
+    "moment": "2.30.1",
+    "parsleyjs": "2.9.2",
+    "select2": "4.1.0-rc.0"
+  }
+}
